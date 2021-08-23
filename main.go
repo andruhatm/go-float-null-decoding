@@ -3,8 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
+
+type Metric struct {
+	Data [][]*float64 `json:"data"`
+}
 
 var jsonStr = []byte(
 	`[{"data":[[ 1628586000000, null ], [ 1628586900000, 0.0 ], [ 1628587800000, null ]] },
@@ -12,7 +15,8 @@ var jsonStr = []byte(
 
 func main() {
 
-	var info [][]float64
+	metricExternalResponse := make([]*Metric, 0)
+	var info [][]*float64
 	var data []map[string]interface{}
 
 	if err := json.Unmarshal(jsonStr, &data); err != nil {
@@ -23,18 +27,22 @@ func main() {
 		newData := data[index]["data"].([]interface{})
 		fmt.Println(newData)
 		for _, in := range newData {
-			var arr []float64
+			var arr []*float64
 			//fmt.Println(in)
 
 			result, _ := json.Marshal(in)
 			fmt.Printf("marshalled result %v\n", string(result))
-			rs := strings.ReplaceAll(string(result), "null", "-1")
+			//rs := strings.ReplaceAll(string(result), "null", "-1")
 
-			json.Unmarshal([]byte(rs), &arr)
+			json.Unmarshal([]byte(result), &arr)
 			info = append(info, arr)
+
 		}
-		fmt.Println(info)
-		info = [][]float64{}
+		metricExternalResponse = append(metricExternalResponse, &Metric{Data: info})
+		info = [][]*float64{}
 	}
 
+	result, _ := json.Marshal(metricExternalResponse)
+
+	fmt.Println(string(result))
 }
